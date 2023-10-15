@@ -9,6 +9,7 @@ import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.scheduler.BukkitScheduler;
 
+
 import static org.bukkit.Bukkit.getServer;
 
 
@@ -19,28 +20,35 @@ public class EventListener implements Listener {
     @EventHandler(priority= EventPriority.HIGHEST)
 
     public void onPlayerLogin(PlayerLoginEvent e) {
-        // 新增玩家名字
+        //新增玩家名字
         String playerName = e.getPlayer().getName();
 
-        // 检查玩家是否已经登记
-        if (LoginData.hasPlayerName(playerName) && ConfigReader.isPlayerRegistered(playerName)) {
-            // 玩家已经登记且已注册
+        EventListener pl = EventListener.instance;
+
+
+        LoginData.addPlayerName(e.getPlayer().getName());
+
+
+        if (LoginData.hasPlayerName(e.getPlayer().getName())&& ConfigReader.isPlayerRegistered(playerName)) {
 
             BukkitScheduler scheduler = getServer().getScheduler();
             scheduler.scheduleSyncRepeatingTask(Main.getPlugin(), new Runnable() {
-                int i = 60;
 
+                int i = 60;
                 @Override
+
                 public void run() {
                     i--;
-                    if (!LoginData.hasPlayerName(playerName)) {
+                    if(!LoginData.hasPlayerName(e.getPlayer().getName())) {
                         scheduler.cancelTasks(Main.getPlugin());
-                        return;
+                        return ;
                     }
                     if (i == 59) {
                         e.getPlayer().setGameMode(GameMode.SPECTATOR);
                         e.getPlayer().sendMessage("請登入/login");
                     }
+
+
 
                     if (i == 30) {
                         e.getPlayer().sendMessage("請登入/login 在30秒後不登入將會踢除");
@@ -49,26 +57,32 @@ public class EventListener implements Listener {
                         scheduler.cancelTasks(Main.getPlugin());
                         e.getPlayer().kickPlayer("你因為沒登入被踢");
                     }
+
                 }
-            }, 0L, 1 * 20L);
-        } else {
-            // 玩家未登记或未注册
+
+            },0L,  1*20L);
+
+
+        }else{
 
             BukkitScheduler scheduler = getServer().getScheduler();
             scheduler.scheduleSyncRepeatingTask(Main.getPlugin(), new Runnable() {
-                int i = 60;
 
+                int i = 60;
                 @Override
+
                 public void run() {
                     i--;
-                    if (!LoginData.hasPlayerName(playerName)) {
+                    if(!LoginData.hasPlayerName(e.getPlayer().getName())) {
                         scheduler.cancelTasks(Main.getPlugin());
-                        return;
+                        return ;
                     }
                     if (i == 59) {
                         e.getPlayer().setGameMode(GameMode.SPECTATOR);
                         e.getPlayer().sendMessage("請使用 /register <密碼>  <重複密碼>來註冊你的帳號。");
                     }
+
+
 
                     if (i == 30) {
                         e.getPlayer().sendMessage("請使用 /register <密碼>  <重複密碼>來註冊你的帳號。");
@@ -77,11 +91,13 @@ public class EventListener implements Listener {
                         scheduler.cancelTasks(Main.getPlugin());
                         e.getPlayer().kickPlayer("你因為沒登入被踢");
                     }
+
                 }
-            }, 0L, 1 * 20L);
+
+            },0L,  1*20L);
+
         }
     }
-
 
 
 
