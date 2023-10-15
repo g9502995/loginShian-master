@@ -12,9 +12,15 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.security.NoSuchAlgorithmException;
 
 public class CommandHandler implements CommandExecutor {
+    private DataReader dataReader;
+
+    public CommandHandler(DataReader dataReader) {
+        this.dataReader = dataReader;
+    }
 
     @Override
     @ParametersAreNonnullByDefault
+
 
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (command.getName().equals("login")) {
@@ -37,9 +43,9 @@ public class CommandHandler implements CommandExecutor {
             }
             String pwdConcat = String.join("<space>", args);
 
-            if (ConfigReader.isPlayerRegistered(sender.getName())) {
+            if (dataReader.isPlayerRegistered(sender.getName())) {
                 // 如果已經註冊
-                if (ConfigReader.verifyPassword(sender.getName(), pwdConcat)) {
+                if (dataReader.verifyPassword(sender.getName(), pwdConcat)) {
                     // 驗證密碼
                     LoginData.removePlayerName(sender.getName());
                     // 解鎖玩家
@@ -54,7 +60,7 @@ public class CommandHandler implements CommandExecutor {
 
             } else {
                 // 玩家没註冊
-                ConfigReader.addPlayer(sender.getName(), pwdConcat, ((Player) sender).getUniqueId().toString());
+                dataReader.addPlayer(sender.getName(), pwdConcat, ((Player) sender).getUniqueId().toString());
                 // 註冊玩家
                 LoginData.removePlayerName(sender.getName());
                 // 解鎖玩家

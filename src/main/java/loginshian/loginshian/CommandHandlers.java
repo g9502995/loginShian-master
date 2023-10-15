@@ -11,6 +11,11 @@ import org.bukkit.entity.Player;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 public class CommandHandlers implements CommandExecutor{
+    private DataReader dataReader;
+
+    public CommandHandlers(DataReader dataReader) {
+        this.dataReader = dataReader;
+    }
 
     @Override
     @ParametersAreNonnullByDefault
@@ -36,13 +41,13 @@ public class CommandHandlers implements CommandExecutor{
 
             String playerName = player.getName();
 
-            if (ConfigReader.isPlayerRegistered(playerName)) {
+            if (dataReader.isPlayerRegistered(playerName)) {
                 player.sendMessage("你已經註冊過了。");
                 return false;
             }
 
             // 在這裡設置玩家的密碼，你可以使用 ConfigReader 的 changePassword 方法
-            ConfigReader.addPlayer(playerName,password,player.getUniqueId().toString());
+            dataReader.addPlayer(playerName,password,player.getUniqueId().toString());
             LoginData.removePlayerName(sender.getName());
             // 解鎖玩家
             Bukkit.getPlayer(sender.getName()).setGameMode(GameMode.SURVIVAL);

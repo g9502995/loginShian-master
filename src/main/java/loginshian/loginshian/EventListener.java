@@ -1,12 +1,14 @@
 package loginshian.loginshian;
 
 import org.bukkit.GameMode;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.*;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitScheduler;
 
 
@@ -14,6 +16,11 @@ import static org.bukkit.Bukkit.getServer;
 
 
 public class EventListener implements Listener {
+    private DataReader dataReader;
+
+    public EventListener(DataReader dataReader) {
+        this.dataReader = dataReader;
+    }
 
     public static EventListener instance;
 
@@ -29,73 +36,58 @@ public class EventListener implements Listener {
         LoginData.addPlayerName(e.getPlayer().getName());
 
 
-        if (LoginData.hasPlayerName(e.getPlayer().getName())&& ConfigReader.isPlayerRegistered(playerName)) {
+        if (LoginData.hasPlayerName(e.getPlayer().getName()) && dataReader.isPlayerRegistered(playerName)) {
+            final Player player = e.getPlayer();
 
-            BukkitScheduler scheduler = getServer().getScheduler();
-            scheduler.scheduleSyncRepeatingTask(Main.getPlugin(), new Runnable() {
-
+            new BukkitRunnable() {
                 int i = 60;
+
                 @Override
-
                 public void run() {
-                    i--;
-                    if(!LoginData.hasPlayerName(e.getPlayer().getName())) {
-                        scheduler.cancelTasks(Main.getPlugin());
-                        return ;
+                    if (!LoginData.hasPlayerName(player.getName())) {
+                        this.cancel();
+                        return;
                     }
-                    if (i == 59) {
-                        e.getPlayer().setGameMode(GameMode.SPECTATOR);
-                        e.getPlayer().sendMessage("請登入/login");
+                    if (i == 60) {
+                        player.setGameMode(GameMode.SPECTATOR);
+                        player.sendMessage("請登入 /login");
                     }
-
-
-
                     if (i == 30) {
-                        e.getPlayer().sendMessage("請登入/login 在30秒後不登入將會踢除");
+                        player.sendMessage("請登入 /login，否则在30秒后将会被踢出");
                     }
                     if (i == 1) {
-                        scheduler.cancelTasks(Main.getPlugin());
-                        e.getPlayer().kickPlayer("你因為沒登入被踢");
+                        this.cancel();
+                        player.kickPlayer("你因为没有登入而被踢出");
                     }
-
-                }
-
-            },0L,  1*20L);
-
-
-        }else{
-
-            BukkitScheduler scheduler = getServer().getScheduler();
-            scheduler.scheduleSyncRepeatingTask(Main.getPlugin(), new Runnable() {
-
-                int i = 60;
-                @Override
-
-                public void run() {
                     i--;
-                    if(!LoginData.hasPlayerName(e.getPlayer().getName())) {
-                        scheduler.cancelTasks(Main.getPlugin());
-                        return ;
+                }
+            }.runTaskTimer(Main.getPlugin(), 0L, 20L);
+        } else {
+            final Player player = e.getPlayer();
+
+            new BukkitRunnable() {
+                int i = 60;
+
+                @Override
+                public void run() {
+                    if (!LoginData.hasPlayerName(player.getName())) {
+                        this.cancel();
+                        return;
                     }
-                    if (i == 59) {
-                        e.getPlayer().setGameMode(GameMode.SPECTATOR);
-                        e.getPlayer().sendMessage("請使用 /register <密碼>  <重複密碼>來註冊你的帳號。");
+                    if (i == 60) {
+                        player.setGameMode(GameMode.SPECTATOR);
+                        player.sendMessage("請使用 /register <密碼>  <重複密碼> 来注册你的帐号。");
                     }
-
-
-
                     if (i == 30) {
-                        e.getPlayer().sendMessage("請使用 /register <密碼>  <重複密碼>來註冊你的帳號。");
+                        player.sendMessage("請使用 /register <密碼>  <重複密碼> 来注册你的帐号。");
                     }
                     if (i == 1) {
-                        scheduler.cancelTasks(Main.getPlugin());
-                        e.getPlayer().kickPlayer("你因為沒登入被踢");
+                        this.cancel();
+                        player.kickPlayer("你因为没有注册而被踢出");
                     }
-
+                    i--;
                 }
-
-            },0L,  1*20L);
-
+            }.runTaskTimer(Main.getPlugin(), 0L, 20L);
         }
     }
 
@@ -106,21 +98,26 @@ public class EventListener implements Listener {
         //離線移除玩家名字
         LoginData.removePlayerName(e.getPlayer().getName());
     }
+
+    @EventHandler
+    public void onPlayerChat(AsyncPlayerChatEvent e) {
+        // 阻止玩家聊天
+        if (LoginData.hasPlayerName(e.getPlayer().getName())) {
+            e.setCancelled(true);
+        }
+    }
     public static void cancelIfNotLoggedIn(Cancellable e) {
-        // 这里写着 Cancellable，和上面的 List 是一个原理，说到底我们只需要「可以取消」这个功能就可以了，至于到底是哪个类，不重要
+
 
         if (e instanceof PlayerEvent) {
-            // instanceof 关键字指示 Java 重新判断左边对象的类型是不是右边的类或者右边类的子类，也就是判断能否进行强制类型转换
+
             if (LoginData.hasPlayerName(((PlayerEvent) e).getPlayer().getName())) {
 
-                // if 语句用于看看玩家是不是在限制列表中
-                // (PlayerEvent) e 进行类型转换
+
                 e.setCancelled(true);
             }
         } else if (e instanceof InventoryOpenEvent) {
-            // else if 表示「上一条 if 的条件为假」并且「当前括号中的条件为真」时才执行大括号里面的内容，相当于「如果不是那样，而是这样，就做……」
 
-            // 限制玩家打开物品栏，需要 InventoryOpenEvent
             if (LoginData.hasPlayerName(((InventoryOpenEvent) e).getPlayer().getName())) {
 
                 e.setCancelled(true);
@@ -130,38 +127,38 @@ public class EventListener implements Listener {
 
     @EventHandler
     public void restrictMove(PlayerMoveEvent e) {
-        // 移动
+
         cancelIfNotLoggedIn(e);
-        // 你看这多方便
+
     }
 
     @EventHandler
     public void restrictInteract(PlayerInteractEvent e) {
-        // 交互
+
         cancelIfNotLoggedIn(e);
     }
 
     @EventHandler
     public void restrictInteractAtEntity(PlayerInteractAtEntityEvent e) {
-        // 实体交互
+
         cancelIfNotLoggedIn(e);
     }
 
     @EventHandler
     public void restrictPortal(PlayerPortalEvent e) {
-        // 传送门
+
         cancelIfNotLoggedIn(e);
     }
 
     @EventHandler
     public void restrictTeleport(PlayerTeleportEvent e) {
-        // 传送
+
         cancelIfNotLoggedIn(e);
     }
 
     @EventHandler
     public void restrictOpenInventory(InventoryOpenEvent e) {
-        // 打开物品栏
+
         cancelIfNotLoggedIn(e);
     }
 
