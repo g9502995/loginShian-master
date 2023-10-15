@@ -1,0 +1,20 @@
+name: LoginShian
+version: '${project.version}'
+main: loginshian.loginshian.Main
+api-version: 1.18
+commands:
+  login:
+    aliases:
+      - "lg"
+      - "l"
+      - "L"
+    description: "登陸或註冊"
+    usage: "/login [password]"
+
+  register:
+      aliaser:
+        - "rg"
+        - "r"
+        - "R"
+      description: "更改密碼"
+      usage: "/register [old password] [new password]"
